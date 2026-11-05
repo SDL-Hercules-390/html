@@ -97,6 +97,7 @@ a real System/390.  The configuration file is an ASCII text file.
 
     <a href="#CODEPAGE">CODEPAGE</a>   819/1047
     <a href="#CNSLPORT">CNSLPORT</a>   3270             Listening port for 3270 device connections
+    <a href="#WSCNSLPORT">WSCNSLPORT</a> 6080             Listening port for WebSocket console connections
     <a href="#SYSGPORT">SYSGPORT</a>   3278             Listening port for SYSG device connections
     <a href="#CONKPALV">CONKPALV</a>   (3,1,10)
     <a href="#LEGACYSENSEID">LEGACYSENSEID</a>   OFF
@@ -122,6 +123,9 @@ a real System/390.  The configuration file is an ASCII text file.
     <a href="#IGNORE">IGNORE</a>     INCLUDE_ERRORS
     <a href="#INCLUDE">INCLUDE</a>    optdevs.cfg
 
+    <a href="#HMCWDT">HMCWDT</a>  cmdsep ;
+    <a href="#HMCWDT">HMCWDT</a>  cmds   "* some command; *another command"
+    <a href="#HMCWDT">HMCWDT</a>  enable
 
     #------------------------------------------------------------------
     #                     <a href="#device_stmts">DEVICE STATEMENTS</a>
@@ -979,6 +983,102 @@ a real System/390.  The configuration file is an ASCII text file.
     from your configuration file.
     <p>
 
+<a name="HMCWDT"></a>
+<dt><code>HMCWDT &nbsp;[cmds "..."] &#124; [cmdsep x] &#124; [disable &#124; off] &#124; [enable &#124; on]  &#124; [status] &#124; [debug [on | off]]
+&#124; [$expire [nn]] &#124; [$start [nn]] &#124; [$stop]
+</code>
+<dd>
+    <p>Specify the configuration for the Hardware Management Console Watchdog Timer. See README.HMCWDT.md for more information.
+    </p>
+    <dl> <!-- begin WDT options -->
+    <dt style="float:left;clear: left; margin-right: 10px">
+        <code>cmds "..."&nbsp;&nbsp;&nbsp;</code></dt>
+        <dd>Specify the Hercules configuration commands to be executed
+                     when the watchdog timer expires.
+                     If spaces are included in the commands, double quotes are required.
+                     The maximum size of the command line is 240 characters.
+            </p>
+            <p>
+                     Multiple commands can be specified if a command line separator is
+                     defined using the 'hmcwdt cmdsep' command.
+            </p>
+            <p>
+                     The default is null; no commands are defined. Therefore, two hmc`wdt
+                     configuration statements are required to enable the watchdog timer:
+            </p>
+            <p>
+                     hmcwdt cmd "..."<br>
+                     hmcwdt enable
+            </p>
+            <p>
+                     One additional command, 'pause xx', can be included for delay between
+                     commands. The pause value is seconds to delay. 'pause' can not
+                     be the last command.
+            </p>
+            <p></p>
+        </dd>
+     <dt style="float:left;clear: left; margin-right: 10px">
+       <code>cmdsep x  &nbsp; &nbsp;&nbsp;</code></dt>
+        <dd style="margin-left: 25px;">
+            Specify the separator between commands defined by 'hmcwdt cmds'.
+            <p></p>
+        </dd>
+     <dt style="float:left;clear: left; margin-right: 10px">
+        <code>cmdsep off &nbsp;&nbsp;</code></dt>
+        <dd  style="margin-left: 18px;">
+             Reset the separator to none.
+            <p></p>
+        </dd>
+     <dt style="float:left;clear: left; margin-right: 10px">
+        <code>disable | off</code></dt>
+        <dd> The watchdog timer will be disabled if the current timer state is
+                     'enabled - inactive'.
+            <p></p>
+        </dd>
+     <dt style="float:left;clear: left; margin-right: 10px">
+        <code>enable | on &nbsp;</code></dt>
+        <dd> The watchdog timer will be enabled if the current timer state is
+                     'disabled' AND watchdog commands have been defined.
+            <p></p>
+        </dd>
+     <dt style="float:left;clear: left; margin-right: 10px">
+        <code>status &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;</code></dt>
+        <dd> Display the current Watchdog Timer status. This is the default action.
+            <p></p>
+        </dd>
+     <dt style="float:left;clear: left; margin-right: 5px">
+        <code>debug on | off</code></dt>
+        <dd> Turn debugging on or off for the watchdog timer.
+             When debugging is on, the watchdog timer will display additional
+             information about its state and actions taken when the timer expires.
+             Debugging is off by default.
+            <p></p>
+        </dd>
+
+     <p> The following commands are used to test the watchdog timer 'cmds "..."' commands:</p>
+
+     <dt style="float:left;clear: left; margin-right: 0px">
+        <code>$expire [nn] &nbsp;</code></dt>
+        <dd> If the watchdog timer state is 'enabled-active', temporarily set the timer
+             to expired and reset the timer
+             with a 'nn' second timeout. 'nn' must be greater than 14. The default timeout is 30 seconds if 'nn' is not specified.
+            <p></p>
+        </dd>
+     <dt style="float:left;clear: left; margin-right: 10px">
+        <code>$start [nn] &nbsp;</code></dt>
+        <dd> If the watchdog timer state is 'enabled-inactive', start the watchdog timer
+             with a 'nn' second timeout. 'nn' must be greater than 14. The default timeout is 30 seconds if 'nn' is not specified.
+            <p></p>
+        </dd>
+     <dt style="float:left;clear: left; margin-right: 10px">
+        <code>$stop &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code></dt>
+        <dd> If the watchdog timer state is 'enabled-active', stop the watchdog timer.
+            <p></p>
+        </dd>
+    </dl> <!-- end WDT options -->
+            <p></p>
+</dd>
+
 <a name="HTTPPORT"></a>
 <dt><code>HTTP &nbsp; PORT &nbsp; <em>nnnn</em> [[NOAUTH] &#124; [AUTH <em>userid password</em>]]</code>
 <dd><p>
@@ -1724,6 +1824,39 @@ a real System/390.  The configuration file is an ASCII text file.
     For timezones east of Greenwich, specify a positive value
     (example: <code>+0100</code> for Central European Time,
     <code>+0930</code> for South Australian Time).
+    <p>
+
+<a name="WSCNSLPORT"></a>
+<dt><code>WSCNSLPORT &nbsp; <i><u>6080</u></i> &nbsp;<i>-or-</i> &nbsp;<i>nnnn</i> &nbsp;<i>-or-</i> &nbsp;<i>host:port</i> &nbsp;<i>-or-</i> &nbsp;<code>NO</code></code>
+<dd><p>
+    Specifies the port number (in decimal) on which the WebSocket
+    console server should listen for incoming connections from
+    browser-based 3270 clients. If an invalid value is specified
+    Hercules defaults to port number <u>6080</u>.
+    Specifying <code>NO</code> disables the WebSocket console server.
+    <p>
+    The WebSocket console runs alongside the traditional telnet/tn3270
+    console controlled by <a href="#CNSLPORT"><code>CNSLPORT</code></a>;
+    it does <em>not</em> replace it. WebSocket clients use the same
+    3270 device pool, so the same restriction applies: no listening
+    port is opened unless at least one
+    <a href="#device_types_table">3270 device</a> is defined in your
+    configuration.
+    <p>
+    The <code>WSCNSLPORT</code> statement may also be specified as
+    <code>host:port</code>, where <code>host</code> identifies the
+    IP address of the host interface the WebSocket console server
+    should bind to. If not specified the server will accept
+    connections on the port from any host interface.
+    <p>
+    The chosen port must differ from
+    <a href="#CNSLPORT"><code>CNSLPORT</code></a> and
+    <a href="#SYSGPORT"><code>SYSGPORT</code></a>; valid range is
+    <code>0&ndash;65535</code>.
+    <p>
+    See the
+    <a href="../readme/README.WebSocket.md">WebSocket Console How-To</a>
+    for details on configuring and connecting browser-based clients.
     <p>
 
 <a name="XPNDSIZE"></a>
@@ -4873,7 +5006,7 @@ ROUTE  00  172.21.3.32  255.255.255.224
 
         <blockquote>
             <table border=1 cellpadding=3>
-            <tr align="center"><th>&nbsp; DASD Device type &nbsp;</th><th>&nbsp; Default &nbsp;Control Unit Type &nbsp;</th></tr>
+            <tr align="center"><th>&nbsp; Dasd Device type &nbsp;</th><th>&nbsp; DEFAULT &nbsp;control unit type &nbsp;</th></tr>
             <tr align="center"><td> 2305 </td><td> 2835 </td></tr>
             <tr align="center"><td> 2311 </td><td> 2841 </td></tr>
             <tr align="center"><td> 2314 </td><td> 2314 </td></tr>
@@ -4895,7 +5028,7 @@ ROUTE  00  172.21.3.32  255.255.255.224
 
         <blockquote>
             <table border=1 cellpadding=3>
-            <tr align="center"><th>&nbsp; Dasd Device type &nbsp;</th><th>&nbsp; Other Control Unit Types &nbsp;</th></tr>
+            <tr align="center"><th>&nbsp; Dasd Device type &nbsp;</th><th>&nbsp; OTHER control unit types &nbsp;</th></tr>
             <tr align="center"><td> 3375 </td><td> 3880-1 </td></tr>
             <tr align="center"><td> 3380 </td><td> 3880-3 </td></tr>
             <tr align="center"><td> 3390 </td><td> 3990<br> 3990-2<br> 3990-3<br> 3990-6</td></tr>
@@ -4908,7 +5041,7 @@ ROUTE  00  172.21.3.32  255.255.255.224
         For modern "z" operating systems (such as z/OS and z/VM, etc) using 3390 dasds,
         <code>'cu=2107'</code> should usually be specified <i>(which is the <b>new default</b>
         for 3390 dasds).</i><br>
-        
+
         <p>
 
         The <i>old (prior)</i> default of <code>'cu=3990-6'</code> should still work for those
@@ -5256,13 +5389,13 @@ ROUTE  00  172.21.3.32  255.255.255.224
 <dt><em>Host Interface Machine (HIM) device</em>
 <dd><p>
 
-    These device types emulate the Host Interface Machine (HIM) devices that 
+    These device types emulate the Host Interface Machine (HIM) devices that
     are used to connect a host running The Michigan Terminal System (MTS)
     to the Internet.  The device type (TLNT, TCPH, or UDPH) should match
     the device type configured into MTS.
     <p>
 
-    The only parameter is the IP address the emulated interface 
+    The only parameter is the IP address the emulated interface
     should bind to.
     <p>
 
